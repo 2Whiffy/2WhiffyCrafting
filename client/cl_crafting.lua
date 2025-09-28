@@ -147,7 +147,7 @@ RegisterNetEvent('it-crafting:client:placeCraftingTable', function(tableItem, me
 
     local placed = false
     local currentX, currentY = startX, startY
-    local moveSpeed = 0.2
+    local moveSpeed = 0.05
 
     while not placed do
         Wait(0)
@@ -163,29 +163,37 @@ RegisterNetEvent('it-crafting:client:placeCraftingTable', function(tableItem, me
         DisableControlAction(0, 22, true) -- Jump
         DisableControlAction(0, 36, true) -- Ctrl (Duck)
 
-        -- Movement with WASD (using both control IDs and direct key checks)
+        -- Additional disables that might interfere with A key
+        DisableControlAction(0, 37, true) -- Select Weapon
+        DisableControlAction(0, 44, true) -- Cover
+
+        -- Movement with WASD (fixed coordinate mapping)
         local moved = false
 
-        -- Try both control mapping and direct key detection
+        -- W/S = Forward/Backward (Y axis)
         if IsControlPressed(0, 32) or IsDisabledControlPressed(0, 32) then -- W (Forward)
             currentY = currentY + moveSpeed
             moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Forward (W)') end
+            if Config.Debug then lib.print.info('[Placement] Moving Forward (W) - Y+') end
         end
-        if IsControlPressed(0, 31) or IsDisabledControlPressed(0, 31) then -- S (Back)
+        if IsControlPressed(0, 31) or IsDisabledControlPressed(0, 31) then -- S (Backward)
             currentY = currentY - moveSpeed
             moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Back (S)') end
+            if Config.Debug then lib.print.info('[Placement] Moving Backward (S) - Y-') end
         end
-        if IsControlPressed(0, 30) or IsDisabledControlPressed(0, 30) then -- A (Left)
+
+        -- A/D = Left/Right (X axis) - Try multiple control IDs for A key
+        if IsControlPressed(0, 30) or IsDisabledControlPressed(0, 30) or
+           IsControlPressed(0, 34) or IsDisabledControlPressed(0, 34) then -- A (Left) - try both 30 and 34
             currentX = currentX - moveSpeed
             moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Left (A)') end
+            if Config.Debug then lib.print.info('[Placement] Moving Left (A) - X-') end
         end
-        if IsControlPressed(0, 33) or IsDisabledControlPressed(0, 33) then -- D (Right)
+        if IsControlPressed(0, 33) or IsDisabledControlPressed(0, 33) or
+           IsControlPressed(0, 35) or IsDisabledControlPressed(0, 35) then -- D (Right) - try both 33 and 35
             currentX = currentX + moveSpeed
             moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Right (D)') end
+            if Config.Debug then lib.print.info('[Placement] Moving Right (D) - X+') end
         end
 
         -- Rotation with mouse scroll
@@ -240,20 +248,27 @@ if Config.Debug then
     RegisterCommand('testcontrols', function()
         CreateThread(function()
             lib.print.info('[Debug] Testing WASD controls for 10 seconds...')
+            lib.print.info('[Debug] Press W/A/S/D keys to test detection')
             local startTime = GetGameTimer()
             while GetGameTimer() - startTime < 10000 do
-                Wait(0)
+                Wait(100) -- Reduced frequency to avoid spam
                 if IsControlPressed(0, 32) or IsDisabledControlPressed(0, 32) then
-                    lib.print.info('[Debug] W key detected!')
+                    lib.print.info('[Debug] W key (Forward) detected!')
                 end
                 if IsControlPressed(0, 31) or IsDisabledControlPressed(0, 31) then
-                    lib.print.info('[Debug] S key detected!')
+                    lib.print.info('[Debug] S key (Back) detected!')
                 end
                 if IsControlPressed(0, 30) or IsDisabledControlPressed(0, 30) then
-                    lib.print.info('[Debug] A key detected!')
+                    lib.print.info('[Debug] A key (Left) detected! Control ID: 30')
+                end
+                if IsControlPressed(0, 34) or IsDisabledControlPressed(0, 34) then
+                    lib.print.info('[Debug] A key (Left) detected! Control ID: 34')
                 end
                 if IsControlPressed(0, 33) or IsDisabledControlPressed(0, 33) then
-                    lib.print.info('[Debug] D key detected!')
+                    lib.print.info('[Debug] D key (Right) detected! Control ID: 33')
+                end
+                if IsControlPressed(0, 35) or IsDisabledControlPressed(0, 35) then
+                    lib.print.info('[Debug] D key (Right) detected! Control ID: 35')
                 end
             end
             lib.print.info('[Debug] Control test finished.')
