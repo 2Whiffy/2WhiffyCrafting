@@ -10,6 +10,12 @@ Locales = Locales or {}
 -- └───────────────────────────────────┘
 
 --[[
+    Overwelmed by the amount of settings? Don't worry, we got you covered.
+    Here is a quick guide to get you started with the configuration of the script.
+    https://docs.it-scripts.com/scripts/it-crafting/installation
+]]
+
+--[[
     The first thing to do is to set which framework, inventory and target system the server uses
     The system will automatically detect the framework, inventory and target system if you set it to 'autodetect'
     If you are using a custom framework, inventory or target system contact the developer or add support yourself by creating a pull request
@@ -313,5 +319,5 @@ Config.ManualDatabaseSetup = false -- Set to true to disable the automatic datab
 
 Config.EnableVersionCheck = true -- Enable version check
 Config.Branch = 'main' -- Set to 'master' to use the master branch, set to 'development' to use the dev branch
-Config.Debug = false -- Set to true to enable debug mode
+Config.Debug = true -- Set to true to enable debug mode
 Config.DebugPoly = false -- Set to true to enable debug mode for PolyZone
