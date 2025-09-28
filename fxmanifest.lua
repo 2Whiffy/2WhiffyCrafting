@@ -19,7 +19,6 @@ shared_scripts {
     'locales/en.lua',
     'locales/*.lua',
     'bridge/**/shared.lua',
-    '@es_extended/imports.lua',
 }
 
 client_scripts {
