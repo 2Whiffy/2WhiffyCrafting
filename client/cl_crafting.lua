@@ -24,6 +24,9 @@ end
 
 
 local placeCraftingTable = function(ped, tableItem, coords, rotation, metadata)
+    if Config.Debug then
+        lib.print.info('[placeCraftingTable] Called with tableItem:', tableItem, 'coords:', coords, 'rotation:', rotation)
+    end
 
     local extendedItemData = Config.CraftingTables[tableItem]
     if not extendedItemData then
@@ -126,7 +129,7 @@ RegisterNetEvent('it-crafting:client:placeCraftingTable', function(tableItem, me
     TriggerEvent('it-crafting:client:syncRestLoop', true)
 
     -- Enhanced placement UI
-    lib.showTextUI('[W/A/S/D] Move Table | [Mouse Scroll] Rotate | [E] Place | [G] Cancel', {
+    lib.showTextUI('[Look] Move | [Mouse Scroll] Rotate | [E] Place | [G] Cancel', {
         position = "left-center",
         icon = "hammer",
     })
@@ -146,54 +149,33 @@ RegisterNetEvent('it-crafting:client:placeCraftingTable', function(tableItem, me
     SetEntityHeading(table, rotation)
 
     local placed = false
-    local currentX, currentY = startX, startY
-    local moveSpeed = 0.05
+    local rotation = GetEntityHeading(ped)
 
     while not placed do
         Wait(0)
 
-        -- Disable player movement during placement
-        DisableControlAction(0, 30, true) -- A/Left
-        DisableControlAction(0, 31, true) -- S/Back
-        DisableControlAction(0, 32, true) -- W/Forward
-        DisableControlAction(0, 33, true) -- D/Right
-        DisableControlAction(0, 34, true) -- Turn Left
-        DisableControlAction(0, 35, true) -- Turn Right
-        DisableControlAction(0, 21, true) -- Sprint
-        DisableControlAction(0, 22, true) -- Jump
-        DisableControlAction(0, 36, true) -- Ctrl (Duck)
+        -- Only disable specific controls that might interfere with placement
+        DisableControlAction(0, 24, true) -- Attack
+        DisableControlAction(0, 25, true) -- Aim
+        DisableControlAction(0, 47, true) -- Weapon wheel
+        DisableControlAction(0, 58, true) -- Weapon wheel
+        DisableControlAction(0, 140, true) -- Melee attack light
+        DisableControlAction(0, 141, true) -- Melee attack heavy
+        DisableControlAction(0, 142, true) -- Melee attack alternate
 
-        -- Additional disables that might interfere with A key
-        DisableControlAction(0, 37, true) -- Select Weapon
-        DisableControlAction(0, 44, true) -- Cover
+        -- Position table where player is looking using raycast
+        local hit, coords = RayCastCamera(100.0)
+        local currentX, currentY, currentZ = 0, 0, 0
 
-        -- Movement with WASD (fixed coordinate mapping)
-        local moved = false
-
-        -- W/S = Forward/Backward (Y axis)
-        if IsControlPressed(0, 32) or IsDisabledControlPressed(0, 32) then -- W (Forward)
-            currentY = currentY + moveSpeed
-            moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Forward (W) - Y+') end
-        end
-        if IsControlPressed(0, 31) or IsDisabledControlPressed(0, 31) then -- S (Backward)
-            currentY = currentY - moveSpeed
-            moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Backward (S) - Y-') end
-        end
-
-        -- A/D = Left/Right (X axis) - Try multiple control IDs for A key
-        if IsControlPressed(0, 30) or IsDisabledControlPressed(0, 30) or
-           IsControlPressed(0, 34) or IsDisabledControlPressed(0, 34) then -- A (Left) - try both 30 and 34
-            currentX = currentX - moveSpeed
-            moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Left (A) - X-') end
-        end
-        if IsControlPressed(0, 33) or IsDisabledControlPressed(0, 33) or
-           IsControlPressed(0, 35) or IsDisabledControlPressed(0, 35) then -- D (Right) - try both 33 and 35
-            currentX = currentX + moveSpeed
-            moved = true
-            if Config.Debug then lib.print.info('[Placement] Moving Right (D) - X+') end
+        if hit then
+            -- Position table where player is looking
+            local _, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z + 5.0, true)
+            currentX, currentY, currentZ = coords.x, coords.y, groundZ
+            SetEntityCoords(table, currentX, currentY, currentZ)
+            SetEntityHeading(table, rotation)
+            if Config.Debug then
+                lib.print.info('[Placement] Looking at: X=' .. string.format("%.2f", currentX) .. ', Y=' .. string.format("%.2f", currentY))
+            end
         end
 
         -- Rotation with mouse scroll
@@ -206,25 +188,24 @@ RegisterNetEvent('it-crafting:client:placeCraftingTable', function(tableItem, me
             if rotation < 0.0 then rotation = 355.0 end
         end
 
-        -- Surface snapping - always snap to ground
-        local _, newGroundZ = GetGroundZFor_3dCoord(currentX, currentY, coords.z + 10.0, true)
 
-        -- Update table position and rotation
-        SetEntityCoords(table, currentX, currentY, newGroundZ)
-        SetEntityHeading(table, rotation)
-
-        -- Debug output for position
-        if moved and Config.Debug then
-            lib.print.info('[Placement] Table position: X=' .. string.format("%.2f", currentX) .. ', Y=' .. string.format("%.2f", currentY) .. ', Z=' .. string.format("%.2f", newGroundZ))
-        end
 
         -- Place table with E
         if IsControlJustPressed(0, 38) then -- E
-            placed = true
-            lib.hideTextUI()
-            DeleteObject(table)
-            placeCraftingTable(ped, tableItem, vector3(currentX, currentY, newGroundZ), rotation, metadata)
-            return
+            if currentX ~= 0 and currentY ~= 0 then -- Only place if we have valid coordinates
+                placed = true
+                lib.hideTextUI()
+                DeleteObject(table)
+                placeCraftingTable(ped, tableItem, vector3(currentX, currentY, currentZ), rotation, metadata)
+                if Config.Debug then
+                    lib.print.info('[Placement] Placing table at: X=' .. currentX .. ', Y=' .. currentY .. ', Z=' .. currentZ)
+                end
+                return
+            else
+                if Config.Debug then
+                    lib.print.info('[Placement] No valid placement location found')
+                end
+            end
         end
 
         -- Cancel with G
@@ -243,41 +224,34 @@ RegisterNetEvent('it-crafting:client:placeCraftingTable', function(tableItem, me
     SetModelAsNoLongerNeeded(hashModel)
 end)
 
--- Debug command to test controls
+-- Debug command to test raycast controls
 if Config.Debug then
-    RegisterCommand('testcontrols', function()
+    RegisterCommand('testraycast', function()
         CreateThread(function()
-            lib.print.info('[Debug] Testing WASD controls for 10 seconds...')
-            lib.print.info('[Debug] Press W/A/S/D keys to test detection')
+            lib.print.info('[Debug] Testing raycast for 10 seconds...')
+            lib.print.info('[Debug] Look around to test raycast detection')
             local startTime = GetGameTimer()
             while GetGameTimer() - startTime < 10000 do
-                Wait(100) -- Reduced frequency to avoid spam
-                if IsControlPressed(0, 32) or IsDisabledControlPressed(0, 32) then
-                    lib.print.info('[Debug] W key (Forward) detected!')
-                end
-                if IsControlPressed(0, 31) or IsDisabledControlPressed(0, 31) then
-                    lib.print.info('[Debug] S key (Back) detected!')
-                end
-                if IsControlPressed(0, 30) or IsDisabledControlPressed(0, 30) then
-                    lib.print.info('[Debug] A key (Left) detected! Control ID: 30')
-                end
-                if IsControlPressed(0, 34) or IsDisabledControlPressed(0, 34) then
-                    lib.print.info('[Debug] A key (Left) detected! Control ID: 34')
-                end
-                if IsControlPressed(0, 33) or IsDisabledControlPressed(0, 33) then
-                    lib.print.info('[Debug] D key (Right) detected! Control ID: 33')
-                end
-                if IsControlPressed(0, 35) or IsDisabledControlPressed(0, 35) then
-                    lib.print.info('[Debug] D key (Right) detected! Control ID: 35')
+                Wait(500) -- Check every half second
+                local hit, coords = RayCastCamera(100.0)
+                if hit then
+                    lib.print.info('[Debug] Raycast hit at: X=' .. string.format("%.2f", coords.x) .. ', Y=' .. string.format("%.2f", coords.y) .. ', Z=' .. string.format("%.2f", coords.z))
+                else
+                    lib.print.info('[Debug] No raycast hit detected')
                 end
             end
-            lib.print.info('[Debug] Control test finished.')
+            lib.print.info('[Debug] Raycast test finished.')
         end)
     end, false)
 end
 
 RegisterNetEvent('it-crafting:client:craftItem', function(craftingType, args)
     if Config.Debug then lib.print.info('Crafting Item:', craftingType, args) end
+
+    if not args then
+        if Config.Debug then lib.print.error('Args is nil in craftItem event') end
+        return
+    end
 
     local craftingData = lib.callback.await('it-crafting:server:getDataById', false, craftingType, args.craftId)
     local recipe = lib.callback.await('it-crafting:server:getRecipeById', false, craftingType, args.craftId, args.recipeId)

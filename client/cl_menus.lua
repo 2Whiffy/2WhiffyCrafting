@@ -66,63 +66,31 @@ RegisterNetEvent("it-crafting:client:showCraftingMenu", function(type, data)
     local recipe = lib.callback.await('it-crafting:server:getRecipeById', false, type, data.craftId, data.recipeId)
 
     local options = {}
-    if not recipe.showIngrediants then
-        for _, v in pairs(recipe.ingrediants) do
-            -- Menu only shows the amount not the name of the item
-            table.insert(options, {
-                title = _U('MENU__UNKNOWN__INGREDIANT'),
-                description = _U('MENU__INGREDIANT__DESC'):format(v.amount),
-                icon = "flask",
-            })
-        end
-    else
-        for k, v in pairs(recipe.ingrediants) do
-            table.insert(options, {
-                title = it.getItemLabel(k),
-                description = _U('MENU__INGREDIANT__DESC'):format(v.amount), --:replace("{amount}", v),
-                icon = "flask",
-            })
-        end
-    end
 
-    -- Add tool requirements display
-    if Config.LevelsSystem.toolConfig.enabled and recipe.tools then
-        for toolCategory, toolData in pairs(recipe.tools) do
-            local hasRequiredTool = false
-            local toolLabel = Config.LevelsSystem.toolConfig.tools[toolCategory] and Config.LevelsSystem.toolConfig.tools[toolCategory].label or toolCategory
-
-            -- Check if player has any of the tools in this category
-            if Config.LevelsSystem.toolConfig.tools[toolCategory] then
-                for _, toolItem in pairs(Config.LevelsSystem.toolConfig.tools[toolCategory].items) do
-                    if it.hasItem(toolItem, toolData.amount) then
-                        hasRequiredTool = true
-                        break
-                    end
-                end
+    -- Add ingredients (no header)
+    if recipe.ingrediants and next(recipe.ingrediants) then
+        if not recipe.showIngrediants then
+            for _, v in pairs(recipe.ingrediants) do
+                -- Menu only shows the amount not the name of the item
+                table.insert(options, {
+                    title = _U('MENU__UNKNOWN__INGREDIANT'),
+                    description = _U('MENU__INGREDIANT__DESC'):format(v.amount),
+                    icon = "flask",
+                })
             end
-
-            local consumeText = ""
-            local shouldRemoveTool = toolData.remove
-            if shouldRemoveTool == nil then
-                shouldRemoveTool = Config.LevelsSystem.toolConfig.consumeOnUse
+        else
+            for k, v in pairs(recipe.ingrediants) do
+                local itemLabel = it.getItemLabel(k) or k
+                table.insert(options, {
+                    title = itemLabel,
+                    description = ('Required: %d'):format(v.amount),
+                    icon = "flask",
+                })
             end
-            if shouldRemoveTool then
-                consumeText = " (Consumed)"
-            end
-
-            table.insert(options, {
-                title = "Tool Required",
-                description = ('%s x%d %s %s'):format(
-                    toolLabel,
-                    toolData.amount,
-                    hasRequiredTool and '✅' or '❌',
-                    consumeText
-                ),
-                icon = hasRequiredTool and "wrench" or "times",
-                disabled = true
-            })
         end
     end
+
+    -- Tools are now handled as ingredients, no separate tool display needed
 
     -- Add level requirement display
     if Config.LevelsSystem.enabled and recipe.levelRequirement then

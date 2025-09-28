@@ -10,12 +10,6 @@ Locales = Locales or {}
 -- └───────────────────────────────────┘
 
 --[[
-    Overwelmed by the amount of settings? Don't worry, we got you covered.
-    Here is a quick guide to get you started with the configuration of the script.
-    https://docs.it-scripts.com/scripts/it-crafting/installation
-]]
-
---[[
     The first thing to do is to set which framework, inventory and target system the server uses
     The system will automatically detect the framework, inventory and target system if you set it to 'autodetect'
     If you are using a custom framework, inventory or target system contact the developer or add support yourself by creating a pull request
@@ -155,17 +149,14 @@ Config.Recipes = {
     ['lockpick'] = {
         label = 'Lockpick',
         ingrediants = {
-            ['scrapmetal'] = {amount = 3, remove = true},
-        },
-        tools = {
-            ['hammer'] = {amount = 1, remove = false}, -- Uses any hammer from tool config
-            ['file'] = {amount = 1, remove = false}    -- Also needs a file for shaping
+            ['metalscrap'] = {amount = 9, remove = true},
+            ['WEAPON_HAMMER'] = {amount = 1, remove = false}, -- Hammer required but not consumed
         },
         outputs = {
-            ['lockpick'] = 2
+            ['lockpick'] = 1
         },
         processTime = 15,
-        showIngrediants = false,
+        showIngrediants = true,
         animation = {
             dict = 'anim@amb@drug_processors@coke@female_a@idles',
             anim = 'idle_a',
@@ -180,9 +171,7 @@ Config.Recipes = {
         label = 'Bandage',
         ingrediants = {
             ['cloth'] = {amount = 3, remove = true},
-        },
-        tools = {
-            ['scissors'] = {amount = 1, remove = false} -- Uses any scissors from tool config
+            ['WEAPON_HAMMER'] = {amount = 1, remove = false}, -- Hammer required but not consumed
         },
         outputs = {
             ['bandage'] = 2
@@ -195,7 +184,7 @@ Config.Recipes = {
         },
         levelRequirement = {
             skillType = 'standard_crafting',
-            level = 5
+            level = 1
         },
         xpReward = 15 -- XP given when crafting this item
     },
@@ -204,14 +193,8 @@ Config.Recipes = {
     ['weapon_pistol'] = {
         label = 'Pistol',
         ingrediants = {
-            ['steel'] = {amount = 5, remove = true},
-            ['gunpowder'] = {amount = 3, remove = true},
-            ['weapon_parts'] = {amount = 2, remove = true}
-        },
-        tools = {
-            ['drill'] = {amount = 1, remove = false},        -- For precision holes
-            ['file'] = {amount = 1, remove = false},         -- For smoothing parts
-            ['screwdriver'] = {amount = 1, remove = false}   -- For assembly
+            ['steel_ingot'] = {amount = 5, remove = true},
+            ['WEAPON_HAMMER'] = {amount = 1, remove = false}, -- Hammer required but not consumed
         },
         outputs = {
             ['WEAPON_PISTOL'] = 1
@@ -224,7 +207,7 @@ Config.Recipes = {
         },
         levelRequirement = {
             skillType = 'weapons_crafting',
-            level = 5
+            level = 1
         },
         xpReward = 50 -- Higher XP for weapons
     },
@@ -233,12 +216,8 @@ Config.Recipes = {
         label = 'Combat Knife',
         ingrediants = {
             ['steel'] = {amount = 2, remove = true},
-            ['rubber'] = {amount = 1, remove = true}
-        },
-        tools = {
-            ['hammer'] = {amount = 1, remove = false},       -- For shaping the blade
-            ['file'] = {amount = 1, remove = false},         -- For sharpening
-            ['welding_torch'] = {amount = 1, remove = false} -- For handle attachment
+            ['rubber'] = {amount = 1, remove = true},
+            ['WEAPON_HAMMER'] = {amount = 1, remove = false}, -- Hammer required but not consumed
         },
         outputs = {
             ['WEAPON_KNIFE'] = 1
@@ -319,5 +298,5 @@ Config.ManualDatabaseSetup = false -- Set to true to disable the automatic datab
 
 Config.EnableVersionCheck = true -- Enable version check
 Config.Branch = 'main' -- Set to 'master' to use the master branch, set to 'development' to use the dev branch
-Config.Debug = true -- Set to true to enable debug mode
+Config.Debug = false -- Set to true to enable debug mode
 Config.DebugPoly = false -- Set to true to enable debug mode for PolyZone

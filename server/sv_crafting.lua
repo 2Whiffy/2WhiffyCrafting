@@ -264,45 +264,11 @@ RegisterNetEvent('it-crafting:server:craftItem', function(type, data)
     if not player then return end
     local givenItems = {}
 
-    -- Check tool requirements first
-    if Config.LevelsSystem.toolConfig.enabled and recipe.tools then
-        for toolCategory, toolData in pairs(recipe.tools) do
-            local hasRequiredTool = false
-            local foundToolItem = nil
-
-            -- Check if player has any of the tools in this category
-            if Config.LevelsSystem.toolConfig.tools[toolCategory] then
-                for _, toolItem in pairs(Config.LevelsSystem.toolConfig.tools[toolCategory].items) do
-                    if it.hasItem(source, toolItem, toolData.amount) then
-                        hasRequiredTool = true
-                        foundToolItem = toolItem
-                        break
-                    end
-                end
-            end
-
-            if not hasRequiredTool then
-                local toolLabel = Config.LevelsSystem.toolConfig.tools[toolCategory] and Config.LevelsSystem.toolConfig.tools[toolCategory].label or toolCategory
-                ShowNotification(source, ('You need a %s to craft this item'):format(toolLabel), 'error')
-                return
-            end
-
-            -- Remove tool if configured to do so (either globally or per recipe)
-            local shouldRemoveTool = toolData.remove
-            if shouldRemoveTool == nil then
-                shouldRemoveTool = Config.LevelsSystem.toolConfig.consumeOnUse
-            end
-
-            if shouldRemoveTool and foundToolItem then
-                if not it.removeItem(source, foundToolItem, toolData.amount) then
-                    ShowNotification(source, ('Failed to consume %s'):format(foundToolItem), 'error')
-                    return
-                else
-                    table.insert(givenItems, {name = foundToolItem, amount = toolData.amount})
-                end
-            end
-        end
+    if Config.Debug then
+        lib.print.info('[Crafting] Starting craft for player:', source, 'recipe:', data.recipeId)
     end
+
+    -- Tool system removed - tools are now handled as non-removable ingredients
 
     -- Fail chance removed - crafting always succeeds if ingredients are available
 
@@ -370,6 +336,10 @@ end)
 RegisterNetEvent('it-crafting:server:createNewTable', function(coords, type, rotation, metadata)
     local src = source
     local player = it.getPlayer(src)
+
+    if Config.Debug then
+        lib.print.info('[createNewTable] Called by player:', src, 'type:', type, 'coords:', coords, 'rotation:', rotation)
+    end
 
     if not player then if Config.Debug then lib.print.error("No Player") end return end
     if #(GetEntityCoords(GetPlayerPed(src)) - coords) > Config.rayCastingDistance + 10 then return end

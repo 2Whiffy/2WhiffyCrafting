@@ -121,7 +121,7 @@ local function updatePlayerXP(citizenid, skillType, xpGain)
         end
         
         -- Trigger level up event
-        local src = it.getPlayerFromCitizenId(citizenid)
+        local src = it.getPlayerFromCitizenId and it.getPlayerFromCitizenId(citizenid) or nil
         if src then
             TriggerClientEvent('2WhiffyCrafting:client:levelUp', src, skillType, newLevel, currentLevel)
         end
@@ -129,7 +129,7 @@ local function updatePlayerXP(citizenid, skillType, xpGain)
     
     -- External integration
     if Config.LevelsSystem.integration.enabled then
-        local src = it.getPlayerFromCitizenId(citizenid)
+        local src = it.getPlayerFromCitizenId and it.getPlayerFromCitizenId(citizenid) or nil
         if src then
             if Config.LevelsSystem.integration.useExport then
                 -- Use export
